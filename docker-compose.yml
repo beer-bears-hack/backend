@@ -27,9 +27,11 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tender_hack
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tender_hack
+      DB_USER: postgres
+      DB_PASSWORD: postgres
       SPRING_LIQUIBASE_ENABLED: "true"
     ports:
       - "8000:8000"
