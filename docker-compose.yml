@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tender-hack-postgres
+    environment:
+      POSTGRES_DB: tender_hack
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tender_hack"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tender-hack-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tender-hack-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tender_hack
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_LIQUIBASE_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    networks:
+      - tender-hack-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  tender-hack-network:
+    driver: bridge
