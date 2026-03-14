@@ -4,6 +4,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class CreateSessionResponse(
-    val sessionId: UUID,
+    val sessionId: String,
     val createdAt: OffsetDateTime,
 )
