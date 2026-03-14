@@ -1,6 +1,7 @@
 package tender.hack.repository
 
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 import tender.hack.domain.dto.ContractPriceInfo
 import tender.hack.domain.entity.ContractEntity
@@ -9,7 +10,8 @@ import java.time.LocalDate
 
 @Repository
 class ContractRepository(
-    private val jdbcTemplate: JdbcTemplate
+    private val jdbcTemplate: JdbcTemplate,
+    private val jdbcClient: JdbcClient
 ) {
     fun count(): Long {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM contracts", Long::class.java) ?: 0L
@@ -90,14 +92,20 @@ class ContractRepository(
             ORDER BY contract_date DESC
         """.trimIndent()
 
-        return jdbcTemplate.query(sql, contractId, cteId) { rs, _ ->
-            ContractPriceInfo(
-                id = rs.getLong("id"),
-                price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
-                date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
-                source = rs.getString("source") ?: "Unknown",
-                region = rs.getString("region")
-            )
-        }
+        return jdbcClient.sql(sql)
+            .param("cte_id", cteId)
+            .param("contract_id", contractId)
+            .query({ rs, _ ->
+                ContractPriceInfo(
+                    id = rs.getLong("id"),
+                    price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
+                    date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
+                    source = rs.getString("source") ?: "Unknown",
+                    region = rs.getString("region")
+                )
+            })
+            .list()
+
+
     }
 }
