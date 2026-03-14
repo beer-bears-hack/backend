@@ -76,4 +76,28 @@ class ContractRepository(
             )
         }
     }
+
+    fun findByContractIdAndCteId(contractId: String, cteId: String): List<ContractPriceInfo> {
+        val sql = """
+            SELECT 
+                id,
+                unit_price as price,
+                contract_date as date,
+                purchase_name as source,
+                customer_region as region
+            FROM contracts
+            WHERE contract_id = ? AND cte_id = ?
+            ORDER BY contract_date DESC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, contractId, cteId) { rs, _ ->
+            ContractPriceInfo(
+                id = rs.getLong("id"),
+                price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
+                date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
+                source = rs.getString("source") ?: "Unknown",
+                region = rs.getString("region")
+            )
+        }
+    }
 }
