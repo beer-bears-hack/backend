@@ -4,11 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import tender.hack.domain.entity.CteEntity
 import tender.hack.domain.entity.ContractEntity
 import tender.hack.repository.ContractRepository
@@ -16,6 +11,8 @@ import tender.hack.repository.CteRepository
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.math.BigDecimal
+import java.net.HttpURLConnection
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -56,23 +53,7 @@ class CsvDataLoader(
 
         log.info("Starting CTE data migration from $cteCsvUrl")
 
-        val s3Client = S3Client.builder()
-            .region(Region.US_EAST_1)
-            .endpointOverride(java.net.URI("https://storage.yandexcloud.net"))
-            .credentialsProvider(
-                StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create("anonymous", "anonymous")
-                )
-            )
-            .build()
-
-        val getRequest = GetObjectRequest.builder()
-            .bucket("hackathon-perm-2026")
-            .key(cteCsvUrl.substringAfterLast("/"))
-            .build()
-
-        val s3Response = s3Client.getObject(getRequest)
-        val reader = BufferedReader(InputStreamReader(s3Response, Charsets.UTF_8))
+        val reader = openHttpConnection(cteCsvUrl)
 
         try {
             val batch = mutableListOf<CteEntity>()
@@ -113,7 +94,6 @@ class CsvDataLoader(
 
         } finally {
             reader.close()
-            s3Client.close()
         }
     }
 
@@ -126,23 +106,7 @@ class CsvDataLoader(
 
         log.info("Starting Contracts data migration from $contractsCsvUrl")
 
-        val s3Client = S3Client.builder()
-            .region(Region.US_EAST_1)
-            .endpointOverride(java.net.URI("https://storage.yandexcloud.net"))
-            .credentialsProvider(
-                StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create("anonymous", "anonymous")
-                )
-            )
-            .build()
-
-        val getRequest = GetObjectRequest.builder()
-            .bucket("hackathon-perm-2026")
-            .key(contractsCsvUrl.substringAfterLast("/"))
-            .build()
-
-        val s3Response = s3Client.getObject(getRequest)
-        val reader = BufferedReader(InputStreamReader(s3Response, Charsets.UTF_8))
+        val reader = openHttpConnection(contractsCsvUrl)
 
         try {
             val batch = mutableListOf<ContractEntity>()
@@ -191,8 +155,18 @@ class CsvDataLoader(
 
         } finally {
             reader.close()
-            s3Client.close()
         }
+    }
+
+    private fun openHttpConnection(urlString: String): BufferedReader {
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+        connection.connectTimeout = 60000
+        connection.readTimeout = 300000
+        connection.doInput = true
+
+        return BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8))
     }
 
     private fun parseCsvLine(line: String): List<String> {
