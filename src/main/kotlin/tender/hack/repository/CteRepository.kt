@@ -43,6 +43,9 @@ class CteRepository(
             .list()
     }
 
+    /**
+     * Deprecated: currently use ML model
+     */
     fun searchByQuery(query: String, limit: Int = 50): List<CteEntity> {
         return jdbcClient.sql("""
             select * from cte 
@@ -72,5 +75,31 @@ class CteRepository(
                 .param("characteristics", cte.characteristics)
                 .update()
         }
+    }
+
+    fun findAllCategories(): List<String> {
+        return jdbcClient.sql("""
+            select distinct category from cte
+        """.trimIndent())
+            .query(String::class.java)
+            .list()
+    }
+
+    fun findAllManufacturers(): List<String> {
+        return jdbcClient.sql("""
+            select distinct manufacturer from cte
+        """.trimIndent())
+            .query(String::class.java)
+            .list()
+    }
+
+    fun takeCteInfoById(cteId: String): CteEntity? {
+        return jdbcClient.sql("""
+            select * from cte
+            where cte_id = :cte_id
+        """.trimIndent())
+            .param("cte_id", cteId)
+            .query(CteEntityMapper)
+            .singleOrNull()
     }
 }

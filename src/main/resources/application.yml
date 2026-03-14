@@ -23,5 +23,9 @@ management:
 yandex:
   cloud:
     bucket: hackathon-perm-2026
-    access-key-id: ${YC_ACCESS_KEY_ID:}
-    secret-access-key: ${YC_SECRET_ACCESS_KEY:}
+    access-key-id: ${YC_ACCESS_KEY_ID}
+    secret-access-key: ${YC_SECRET_ACCESS_KEY}
+
+ml:
+  api:
+    url: https://beerbears.website/api/ml

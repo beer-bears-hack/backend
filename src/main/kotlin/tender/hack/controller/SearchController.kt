@@ -29,7 +29,7 @@ class SearchController(
     @PostMapping("/search")
     @Operation(summary = "Search for STE items", description = "Returns list of comparable STE items with prices")
     fun search(@RequestBody request: SearchRequest): ResponseEntity<SearchResponse> {
-        val results = searchService.search(request.query, request.regionCode)
+        val results = searchService.search(request.query, request.category, request.manufacturer)
         return ResponseEntity.ok(SearchResponse(results))
     }
 }

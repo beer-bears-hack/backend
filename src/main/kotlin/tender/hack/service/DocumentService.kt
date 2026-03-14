@@ -144,16 +144,16 @@ class DocumentService(
      * - PUT request to https://storage.yandexcloud.net/{bucket}/{key}
      * - AWS Signature v4 authentication required
      * - Content-Type header should be set
-     * - Content-MD5 header recommended
+     * - Content-MD5 header must be Base64 encoded (not hex!)
      */
     private fun uploadToS3(fileName: String, content: ByteArray): String {
         val key = "documents/$fileName"
 
         try {
-            // Calculate MD5 for Content-MD5 header (required by Yandex Cloud)
+            // Calculate MD5 and encode to Base64 (S3 expects Base64, not hex string)
             val md5Hash = java.security.MessageDigest.getInstance("MD5")
                 .digest(content)
-                .let { it.joinToString("") { "%02x".format(it) } }
+                .let { java.util.Base64.getEncoder().encodeToString(it) }
 
             val putRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -164,11 +164,9 @@ class DocumentService(
 
             s3Client.putObject(putRequest, RequestBody.fromBytes(content))
 
-            // Return public URL
             return "https://storage.yandexcloud.net/$bucketName/$key"
         } catch (e: Exception) {
             log.error("Failed to upload to S3: ${e.message}", e)
-            // Return local URL for development without S3 credentials
             return "/api/documents/download/$fileName"
         }
     }
