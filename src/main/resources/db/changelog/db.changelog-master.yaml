@@ -1,3 +1,9 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-initial-schema.yaml
+  - include:
+      file: db/changelog/changes/002-cte-schema.yaml
+  - include:
+      file: db/changelog/changes/003-session-schema.yaml
+  - include:
+      file: db/changelog/changes/004-contracts-schema.yaml

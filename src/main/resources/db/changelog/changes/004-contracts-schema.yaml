@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-contracts-schema
+      author: ko.zimin
+      comment: Create contracts table for procurement data
+
+      changes:
+        - createTable:
+            tableName: contracts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: purchase_name
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contract_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purchase_type
+                  type: text
+              - column:
+                  name: initial_contract_price
+                  type: numeric
+              - column:
+                  name: final_contract_price
+                  type: numeric
+              - column:
+                  name: discount_percent
+                  type: numeric
+              - column:
+                  name: nds_rate
+                  type: varchar(20)
+              - column:
+                  name: contract_date
+                  type: timestamptz
+              - column:
+                  name: customer_region
+                  type: text
+              - column:
+                  name: supplier_region
+                  type: text
+              - column:
+                  name: cte_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cte_name
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_price
+                  type: numeric
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_contracts_cte_id
+            tableName: contracts
+            columns:
+              - column:
+                  name: cte_id
+
+        - createIndex:
+            indexName: idx_contracts_contract_id
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_id
+
+        - createIndex:
+            indexName: idx_contracts_date
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_date
