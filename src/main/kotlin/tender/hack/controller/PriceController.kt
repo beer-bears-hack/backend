@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import tender.hack.controller.response.PriceResponse
+import tender.hack.controller.response.SearchResponse
 import tender.hack.service.PriceService
 
 /**
@@ -27,13 +28,13 @@ class PriceController(
 ) {
 
     @GetMapping("/ste/{steId}/prices")
-    @Operation(summary = "Get prices for STE item", description = "Returns price history for a specific STE item")
+    @Operation(summary = "Get ctes in second search with prices", description = "Returns all info about best ctes")
     fun getPrices(
         @PathVariable steId: String,
         @RequestParam(required = false) region: String?,
         @RequestParam(required = false, defaultValue = "12") period: Int
-    ): ResponseEntity<PriceResponse> {
-        val prices = priceService.getPricesForSte(steId, region, period)
-        return ResponseEntity.ok(PriceResponse(steId, prices))
+    ): ResponseEntity<SearchResponse> {
+        val results = priceService.getPricesForSte(steId, region, period)
+        return ResponseEntity.ok(SearchResponse(results))
     }
 }
