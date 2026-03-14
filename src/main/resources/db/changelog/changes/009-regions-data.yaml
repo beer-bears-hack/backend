@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-regions-data
+      author: ko.zimin
+      comment: Load regions data from CSV
+
+      changes:
+        - loadData:
+            tableName: regions
+            file: db/changelog/data/regions_with_coords.csv
+            columns:
+              - column:
+                  name: region
+                  type: varchar(255)
+              - column:
+                  name: lat
+                  type: numeric(10, 7)
+                  defaultValue: 0.0
+              - column:
+                  name: lon
+                  type: numeric(10, 7)
+                  defaultValue: 0.0

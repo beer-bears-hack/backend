@@ -16,6 +16,8 @@ data class CalculateItemRequest(
 )
 
 data class CalculateItem(
-    val contractId: String,
-    val cteId: String
+    val contractId: String?,
+    val cteId: String?,
+    val price: Double?,
+    val source: String?
 )

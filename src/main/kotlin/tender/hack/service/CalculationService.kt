@@ -1,7 +1,9 @@
 package tender.hack.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import tender.hack.controller.requests.CalculateItemRequest
 import tender.hack.controller.requests.SaveCalculationRequest
 import tender.hack.controller.response.CalculateItemResponse
@@ -29,12 +31,19 @@ class CalculationService(
         log.info("Calculate request: ${request.items.size} items, quantity=${request.quantity}, method=${request.method}")
 
         // Get all prices from selected items
-        val allPrices = mutableListOf<Double>()
+        val allPrices = mutableListOf<Pair<Double, Boolean>>()
 
         for (item in request.items) {
             // Get contract by contractId and cteId
-            val contractPrices = contractRepository.findByContractIdAndCteId(item.contractId, item.cteId)
-            allPrices.addAll(contractPrices.map { it.price })
+            if (item.contractId != null && item.cteId != null) {
+                val contractPrices = contractRepository.findByContractIdAndCteId(item.contractId, item.cteId)
+                allPrices.addAll(contractPrices.map { it.price to true})
+            } else {
+                //TODO: maybe add list of reasons in order to use it in final doc
+                allPrices.add(
+                    (item.price ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)) to false
+                )
+            }
         }
 
         log.info("All prices: $allPrices")
@@ -51,13 +60,19 @@ class CalculationService(
             )
         }
 
+        // Это лист только цен из БД
+        val dataPricesList = allPrices.filter { it.second }.map { it.first }
+
+        // Ищем окно и сколько данных достаточно
+
+
         // Calculate statistics
-        val minPrice = allPrices.minOrNull() ?: 0.0
-        val maxPrice = allPrices.maxOrNull() ?: 0.0
-        val avgPrice = allPrices.average()
+        val minPrice = dataPricesList.minOrNull() ?: 0.0
+        val maxPrice = dataPricesList.maxOrNull() ?: 0.0
+        val avgPrice = dataPricesList.average()
 
         // Calculate coefficient of variation (CV = stdDev / mean)
-        val stdDev = calculateStandardDeviation(allPrices)
+        val stdDev = calculateStandardDeviation(dataPricesList)
         val coeffVariation = if (avgPrice > 0) stdDev / avgPrice else 0.0
 
         // Homogeneous if CV < 0.33 (33%)
