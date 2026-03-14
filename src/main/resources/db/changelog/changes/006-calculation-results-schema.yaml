@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-calculation-results-schema
+      author: ko.zimin
+      comment: Create table to store calculation results for document generation
+
+      changes:
+        - createTable:
+            tableName: calculation_results
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: session_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_calculation_session
+                    references: session(id)
+              - column:
+                  name: unit_price
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_price
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_price
+                  type: numeric
+              - column:
+                  name: max_price
+                  type: numeric
+              - column:
+                  name: coeff_variation
+                  type: numeric
+              - column:
+                  name: is_homogeneous
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: quantity
+                  type: numeric
+              - column:
+                  name: method
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_calculation_session_id
+            tableName: calculation_results
+            columns:
+              - column:
+                  name: session_id

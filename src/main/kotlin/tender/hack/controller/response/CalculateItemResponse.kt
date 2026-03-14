@@ -16,7 +16,8 @@ data class CalculateItemResponse(
     val totalPrice: Double,
     val priceRange: PriceRange,
     val coeffVariation: Double,
-    val isHomogeneous: Boolean
+    val isHomogeneous: Boolean,
+    val quantity: Int
 )
 
 data class PriceRange(

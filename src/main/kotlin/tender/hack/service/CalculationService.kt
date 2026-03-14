@@ -3,9 +3,14 @@ package tender.hack.service
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tender.hack.controller.requests.CalculateItemRequest
+import tender.hack.controller.requests.SaveCalculationRequest
 import tender.hack.controller.response.CalculateItemResponse
 import tender.hack.controller.response.PriceRange
+import tender.hack.domain.entity.CalculationResultEntity
+import tender.hack.repository.CalculationResultRepository
 import tender.hack.repository.ContractRepository
+import java.math.BigDecimal
+import java.util.UUID
 
 /**
  * Service for calculating NMCK (initial procurement price)
@@ -15,7 +20,8 @@ import tender.hack.repository.ContractRepository
  */
 @Service
 class CalculationService(
-    private val contractRepository: ContractRepository
+    private val contractRepository: ContractRepository,
+    private val calculationResultRepository: CalculationResultRepository
 ) {
     private val log = LoggerFactory.getLogger(CalculationService::class.java)
 
@@ -40,7 +46,8 @@ class CalculationService(
                 totalPrice = 0.0,
                 priceRange = PriceRange(0.0, 0.0),
                 coeffVariation = 0.0,
-                isHomogeneous = true
+                isHomogeneous = true,
+                quantity = request.quantity
             )
         }
 
@@ -65,8 +72,26 @@ class CalculationService(
             totalPrice = totalPrice,
             priceRange = PriceRange(minPrice, maxPrice),
             coeffVariation = coeffVariation,
-            isHomogeneous = isHomogeneous
+            isHomogeneous = isHomogeneous,
+            quantity = request.quantity
         )
+    }
+
+    fun saveCalculation(sessionId: UUID, request: SaveCalculationRequest) {
+        val entity = CalculationResultEntity(
+            id = UUID.randomUUID(),
+            sessionId = sessionId,
+            unitPrice = BigDecimal.valueOf(request.unitPrice),
+            totalPrice = BigDecimal.valueOf(request.totalPrice),
+            minPrice = BigDecimal.valueOf(request.priceRange.min),
+            maxPrice = BigDecimal.valueOf(request.priceRange.max),
+            coeffVariation = request.coeffVariation,
+            isHomogeneous = request.isHomogeneous,
+            quantity = BigDecimal.valueOf(request.quantity.toLong()),
+            method = null
+        )
+        calculationResultRepository.save(entity)
+        log.info("Saved calculation result for session $sessionId")
     }
 
     private fun calculateStandardDeviation(values: List<Double>): Double {
