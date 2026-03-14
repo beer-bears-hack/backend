@@ -31,6 +31,8 @@ class CalculationService(
             allPrices.addAll(contractPrices.map { it.price })
         }
 
+        log.info("All prices: $allPrices")
+
         // If no prices found, return default values
         if (allPrices.isEmpty()) {
             return CalculateItemResponse(

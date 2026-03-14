@@ -7,7 +7,7 @@ class GetPricesResponse(
     val prices: List<PriceResponse>,
 ) {
     data class PriceResponse(
-        val id: Long,
+        val contractId: Long,
         val price: Double,
         val date: String,
         val source: String,
@@ -21,7 +21,7 @@ class GetPricesResponse(
                 steId = steId,
                 prices = prices.map { p ->
                     PriceResponse(
-                        id = p.id,
+                        contractId = p.contractId,
                         price = p.price,
                         date = p.date.toString(),
                         source = p.source,

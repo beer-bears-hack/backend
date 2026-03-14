@@ -58,37 +58,40 @@ class ContractRepository(
     fun findByCteId(cteId: String): List<ContractPriceInfo> {
         val sql = """
             SELECT 
-                id,
+                contract_id,
                 unit_price as price,
                 contract_date as date,
                 purchase_name as source,
                 customer_region as region
             FROM contracts
-            WHERE cte_id = ?
+            WHERE cte_id = :cte_id
             ORDER BY contract_date DESC
         """.trimIndent()
 
-        return jdbcTemplate.query(sql) { rs, _ ->
+        return jdbcClient.sql(sql)
+            .param("cte_id", cteId)
+            .query({ rs, _ ->
             ContractPriceInfo(
-                id = rs.getLong("id"),
+                contractId = rs.getLong("contract_id"),
                 price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
                 date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
                 source = rs.getString("source") ?: "Unknown",
                 region = rs.getString("region")
-            )
-        }
+            )}
+            ).list()
+
     }
 
     fun findByContractIdAndCteId(contractId: String, cteId: String): List<ContractPriceInfo> {
         val sql = """
             SELECT 
-                id,
+                contract_id,
                 unit_price as price,
                 contract_date as date,
                 purchase_name as source,
                 customer_region as region
             FROM contracts
-            WHERE contract_id = ? AND cte_id = ?
+            WHERE contract_id = :contract_id AND cte_id = :cte_id
             ORDER BY contract_date DESC
         """.trimIndent()
 
@@ -97,7 +100,7 @@ class ContractRepository(
             .param("contract_id", contractId)
             .query({ rs, _ ->
                 ContractPriceInfo(
-                    id = rs.getLong("id"),
+                    contractId = rs.getLong("contract_id"),
                     price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
                     date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
                     source = rs.getString("source") ?: "Unknown",
