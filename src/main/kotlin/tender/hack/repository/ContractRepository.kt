@@ -1,14 +1,17 @@
 package tender.hack.repository
 
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
+import tender.hack.domain.dto.ContractPriceInfo
 import tender.hack.domain.entity.ContractEntity
-import java.math.BigDecimal
 import java.sql.Timestamp
+import java.time.LocalDate
 
 @Repository
 class ContractRepository(
-    private val jdbcTemplate: JdbcTemplate
+    private val jdbcTemplate: JdbcTemplate,
+    private val jdbcClient: JdbcClient
 ) {
     fun count(): Long {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM contracts", Long::class.java) ?: 0L
@@ -50,5 +53,59 @@ class ContractRepository(
                 ps.setBigDecimal(14, contract.unitPrice)
             }
         }
+    }
+
+    fun findByCteId(cteId: String): List<ContractPriceInfo> {
+        val sql = """
+            SELECT 
+                id,
+                unit_price as price,
+                contract_date as date,
+                purchase_name as source,
+                customer_region as region
+            FROM contracts
+            WHERE cte_id = ?
+            ORDER BY contract_date DESC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql) { rs, _ ->
+            ContractPriceInfo(
+                id = rs.getLong("id"),
+                price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
+                date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
+                source = rs.getString("source") ?: "Unknown",
+                region = rs.getString("region")
+            )
+        }
+    }
+
+    fun findByContractIdAndCteId(contractId: String, cteId: String): List<ContractPriceInfo> {
+        val sql = """
+            SELECT 
+                id,
+                unit_price as price,
+                contract_date as date,
+                purchase_name as source,
+                customer_region as region
+            FROM contracts
+            WHERE contract_id = ? AND cte_id = ?
+            ORDER BY contract_date DESC
+        """.trimIndent()
+
+        return jdbcClient.sql(sql)
+            .param("cte_id", cteId)
+            .param("contract_id", contractId)
+            .query({ rs, _ ->
+                ContractPriceInfo(
+                    id = rs.getLong("id"),
+                    price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
+                    date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
+                    source = rs.getString("source") ?: "Unknown",
+                    region = rs.getString("region")
+                )
+            })
+            .list()
+
+
     }
 }

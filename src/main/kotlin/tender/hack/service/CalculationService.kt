@@ -1,67 +1,77 @@
 package tender.hack.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tender.hack.controller.requests.CalculateItemRequest
 import tender.hack.controller.response.CalculateItemResponse
-import kotlin.math.abs
-import kotlin.math.sqrt
+import tender.hack.controller.response.PriceRange
+import tender.hack.repository.ContractRepository
 
+/**
+ * Service for calculating NMCK (initial procurement price)
+ *
+ * POST /calculate/item
+ * Calculate price based on selected contracts + CTE items
+ */
 @Service
-class CalculationService {
+class CalculationService(
+    private val contractRepository: ContractRepository
+) {
+    private val log = LoggerFactory.getLogger(CalculationService::class.java)
 
-    /**
-     * Calculate NMCK (initial procurement price) for selected prices.
-     * Frontend can select/deselect prices to include in calculation.
-     */
-    fun calculateItem(request: CalculateItemRequest): CalculateItemResponse {
-        // Mock prices - in real implementation, fetch from database by selectedPriceIds
-        val selectedPrices = request.selectedPriceIds.map { id ->
-            // Mock price value based on id
-            (id * 100).toDouble()
-        } + (request.manualPrices?.map { it.price } ?: emptyList())
+    fun calculate(request: CalculateItemRequest): CalculateItemResponse {
+        log.info("Calculate request: ${request.items.size} items, quantity=${request.quantity}, method=${request.method}")
 
-        if (selectedPrices.isEmpty()) {
-            throw IllegalArgumentException("No prices selected for calculation")
+        // Get all prices from selected items
+        val allPrices = mutableListOf<Double>()
+
+        for (item in request.items) {
+            // Get contract by contractId and cteId
+            val contractPrices = contractRepository.findByContractIdAndCteId(item.contractId, item.cteId)
+            allPrices.addAll(contractPrices.map { it.price })
         }
 
-        val minPrice = selectedPrices.minOrNull() ?: 0.0
-        val maxPrice = selectedPrices.maxOrNull() ?: 0.0
-        val avgPrice = selectedPrices.average()
-
-        // Calculate coefficient of variation
-        val stdDev = if (selectedPrices.size > 1) {
-            val mean = avgPrice
-            val variance = selectedPrices.map { (it - mean) * (it - mean) }.average()
-            sqrt(variance)
-        } else {
-            0.0
+        // If no prices found, return default values
+        if (allPrices.isEmpty()) {
+            return CalculateItemResponse(
+                unitPrice = 0.0,
+                totalPrice = 0.0,
+                priceRange = PriceRange(0.0, 0.0),
+                coeffVariation = 0.0,
+                isHomogeneous = true
+            )
         }
 
+        // Calculate statistics
+        val minPrice = allPrices.minOrNull() ?: 0.0
+        val maxPrice = allPrices.maxOrNull() ?: 0.0
+        val avgPrice = allPrices.average()
+
+        // Calculate coefficient of variation (CV = stdDev / mean)
+        val stdDev = calculateStandardDeviation(allPrices)
         val coeffVariation = if (avgPrice > 0) stdDev / avgPrice else 0.0
 
-        // Check homogeneity (coefficient of variation < 0.33 = 33%)
+        // Homogeneous if CV < 0.33 (33%)
         val isHomogeneous = coeffVariation < 0.33
 
-        // Use average price as unit price for homogeneous data
-        // For non-homogeneous, use median or exclude outliers
-        val unitPrice = if (isHomogeneous) {
-            avgPrice
-        } else {
-            // Exclude outliers and recalculate
-            val filteredPrices = selectedPrices.filter { price ->
-                abs(price - avgPrice) <= 2 * stdDev
-            }
-            if (filteredPrices.isNotEmpty()) filteredPrices.average() else avgPrice
-        }
-
+        // Use average as unit price
+        val unitPrice = avgPrice
         val totalPrice = unitPrice * request.quantity
 
         return CalculateItemResponse(
             unitPrice = unitPrice,
             totalPrice = totalPrice,
-            priceRange = CalculateItemResponse.PriceRange(minPrice, maxPrice),
+            priceRange = PriceRange(minPrice, maxPrice),
             coeffVariation = coeffVariation,
             isHomogeneous = isHomogeneous
         )
+    }
+
+    private fun calculateStandardDeviation(values: List<Double>): Double {
+        if (values.size < 2) return 0.0
+
+        val mean = values.average()
+        val variance = values.map { (it - mean) * (it - mean) }.average()
+        return kotlin.math.sqrt(variance)
     }
 }
