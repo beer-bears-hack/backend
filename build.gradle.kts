@@ -20,6 +20,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
     
+    // OkHttp for HTTP client
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

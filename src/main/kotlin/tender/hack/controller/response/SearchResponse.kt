@@ -7,7 +7,7 @@ data class SearchResponse(
 )
 
 data class SearchResultItem(
-    val steId: String,
+    val cteId: String,
     val name: String,
     val characteristics: Map<String, String>,
     val similarityScore: Double,
