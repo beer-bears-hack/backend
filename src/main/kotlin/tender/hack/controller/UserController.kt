@@ -25,7 +25,7 @@ class UserController(
 
     @GetMapping("/sessions/{uuid}")
     fun getSession(@PathVariable uuid: String): GetSessionResponse {
-        val session = userService.getSessionByUuid(UUID.nameUUIDFromBytes(uuid.toByteArray()))
+        val session = userService.getSessionByUuid(UUID.fromString(uuid))
 
         return GetSessionResponse(
             id = session.userDto.uuid.toString(),
