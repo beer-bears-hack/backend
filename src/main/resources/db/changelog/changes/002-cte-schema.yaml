@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-cte-schema
+      author: ko.zimin
+      comment: Create CTE table for catalog of products/services
+
+      changes:
+        - createTable:
+            tableName: cte
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cte_id
+                  type: varchar
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: cte_name
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: text
+              - column:
+                  name: manufacturer
+                  type: text
+              - column:
+                  name: characteristics
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_cte_category
+            tableName: cte
+            columns:
+              - column:
+                  name: category
+
+        - createIndex:
+            indexName: idx_cte_name_search
+            tableName: cte
+            columns:
+              - column:
+                  name: cte_name
+                  type: text_pattern_ops
+
+        - createIndex:
+            indexName: idx_cte_id
+            tableName: cte
+            columns:
+              - column:
+                  name: cte_id

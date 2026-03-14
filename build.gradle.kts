@@ -31,6 +31,7 @@ dependencies {
     runtimeOnly("org.liquibase:liquibase-core:4.30.0")
     liquibaseRuntime("org.postgresql:postgresql:42.7.2")
     
+    
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
