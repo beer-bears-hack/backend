@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-change-calculation-results.yaml
+      author: ko.zimin
+      comment: Add cte_id column to calculation_results table
+
+      changes:
+        - addColumn:
+            tableName: calculation_results
+            columns:
+              - column:
+                  name: cte_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+                  remarks: "CTE identifier from the source data"
+
+      rollback:
+        - dropColumn:
+            tableName: calculation_results
+            columnName: cte_id

@@ -14,4 +14,5 @@ data class CalculationResultEntity(
     val isHomogeneous: Boolean,
     val quantity: BigDecimal?,
     val method: String?,
+    val cteId: String
 )

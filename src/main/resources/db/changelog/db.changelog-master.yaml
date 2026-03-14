@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/changes/008-regions-schema.yaml
   - include:
       file: db/changelog/changes/009-regions-data.yaml
+  - include:
+      file: db/changelog/changes/010-change-calculation-results.yaml

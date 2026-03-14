@@ -19,7 +19,8 @@ data class SaveCalculationRequest(
     val priceRange: PriceRangeInput,
     val coeffVariation: Double,
     val isHomogeneous: Boolean,
-    val quantity: Int
+    val quantity: Int,
+    val cteId: String
 )
 
 data class PriceRangeInput(
