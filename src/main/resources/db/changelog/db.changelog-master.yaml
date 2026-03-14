@@ -7,3 +7,7 @@ databaseChangeLog:
       file: db/changelog/changes/003-session-schema.yaml
   - include:
       file: db/changelog/changes/004-contracts-schema.yaml
+  - include:
+      file: db/changelog/changes/006-calculation-results-schema.yaml
+  - include:
+      file: db/changelog/changes/007-update-calculation-results-foreign-key.yaml

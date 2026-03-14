@@ -32,6 +32,11 @@ dependencies {
     runtimeOnly("org.liquibase:liquibase-core:4.30.0")
     liquibaseRuntime("org.postgresql:postgresql:42.7.2")
     
+    // AWS SDK for S3 (Yandex Cloud compatible)
+    implementation("software.amazon.awssdk:s3:2.29.15")
+    
+    // Apache POI for DOCX generation
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
     
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
