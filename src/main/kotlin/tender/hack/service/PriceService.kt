@@ -27,7 +27,7 @@ class PriceService(
         // Mock prices based on similar CTEs
         return similarCtes.mapIndexed { index, cte ->
             PriceDto(
-                id = cte.id,
+                contractId = cte.id,
                 price = generateMockPrice(cte),
                 date = LocalDate.now().minusDays((index * 7).toLong()),
                 source = "ML Similar CTE: ${cte.cteId}",

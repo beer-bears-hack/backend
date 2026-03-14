@@ -28,7 +28,7 @@ class SearchService(
             val contractPrices = contractRepository.findByCteId(cte.cteId)
             val prices = contractPrices.map { contract ->
                 PriceDto(
-                    id = contract.id,
+                    contractId = contract.contractId,
                     price = contract.price,
                     date = contract.date,
                     source = contract.source ?: "Unknown",

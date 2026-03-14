@@ -3,7 +3,7 @@ package tender.hack.domain.dto
 import java.time.LocalDate
 
 class PriceDto(
-    val id: Long,
+    val contractId: Long,
     val price: Double,
     val date: LocalDate,
     val source: String,
