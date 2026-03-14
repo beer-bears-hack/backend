@@ -11,6 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: [self-hosted]
+    environment: prod  
     
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +27,10 @@ jobs:
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
 
+          echo "Secrets available (checking if set, not showing values):"
+          echo "YC_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID != '' && 'YES' || 'NO' }}"
+          echo "YC_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY != '' && 'YES' || 'NO' }}"
+          echo "POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD != '' && 'YES' || 'NO' }}"
 
           # Build and start
           if [ -n "${{ github.event.inputs.service }}" ]; then
