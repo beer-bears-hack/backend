@@ -2,9 +2,10 @@ package tender.hack.repository
 
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+import tender.hack.domain.dto.ContractPriceInfo
 import tender.hack.domain.entity.ContractEntity
-import java.math.BigDecimal
 import java.sql.Timestamp
+import java.time.LocalDate
 
 @Repository
 class ContractRepository(
@@ -49,6 +50,30 @@ class ContractRepository(
                 ps.setString(13, contract.cteName)
                 ps.setBigDecimal(14, contract.unitPrice)
             }
+        }
+    }
+
+    fun findByCteId(cteId: String): List<ContractPriceInfo> {
+        val sql = """
+            SELECT 
+                id,
+                unit_price as price,
+                contract_date as date,
+                purchase_name as source,
+                customer_region as region
+            FROM contracts
+            WHERE cte_id = ?
+            ORDER BY contract_date DESC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql) { rs, _ ->
+            ContractPriceInfo(
+                id = rs.getLong("id"),
+                price = rs.getBigDecimal("price")?.toDouble() ?: 0.0,
+                date = rs.getTimestamp("date")?.toLocalDateTime()?.toLocalDate() ?: LocalDate.now(),
+                source = rs.getString("source") ?: "Unknown",
+                region = rs.getString("region")
+            )
         }
     }
 }
