@@ -11,3 +11,7 @@ databaseChangeLog:
       file: db/changelog/changes/006-calculation-results-schema.yaml
   - include:
       file: db/changelog/changes/007-update-calculation-results-foreign-key.yaml
+  - include:
+      file: db/changelog/changes/008-regions-schema.yaml
+  - include:
+      file: db/changelog/changes/009-regions-data.yaml

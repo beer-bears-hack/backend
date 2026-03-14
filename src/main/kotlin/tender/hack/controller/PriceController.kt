@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import tender.hack.controller.response.GetPricesResponse
 import tender.hack.controller.response.PriceResponse
 import tender.hack.controller.response.SearchResponse
+import tender.hack.service.ApiService
 import tender.hack.service.PriceService
 
 /**
@@ -24,17 +26,24 @@ import tender.hack.service.PriceService
 @RequestMapping("/api")
 @Tag(name = "Prices", description = "Price analysis endpoints")
 class PriceController(
-    private val priceService: PriceService
+    private val priceService: PriceService,
+    private val apiService: ApiService
 ) {
 
-    @GetMapping("/ste/{steId}/prices")
+    @GetMapping("/cte/{cteId}/prices")
     @Operation(summary = "Get ctes in second search with prices", description = "Returns all info about best ctes")
     fun getPrices(
-        @PathVariable steId: String,
+        @PathVariable cteId: String,
         @RequestParam(required = false) region: String?,
         @RequestParam(required = false, defaultValue = "12") period: Int
-    ): ResponseEntity<SearchResponse> {
-        val results = priceService.getPricesForSte(steId, region, period)
-        return ResponseEntity.ok(SearchResponse(results))
+    ): ResponseEntity<GetPricesResponse> {
+        val results = priceService.getPricesForSte(cteId, region, period)
+        val cteInfo = apiService.takeCteInfoById(cteId)
+        return ResponseEntity.ok(
+            GetPricesResponse(
+                cteDto = cteInfo,
+                results = results
+            )
+        )
     }
 }

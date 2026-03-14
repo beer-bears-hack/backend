@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-regions-schema
+      author: ko.zimin
+      comment: Create regions table with coordinates
+
+      changes:
+        - createTable:
+            tableName: regions
+            columns:
+              - column:
+                  name: id
+                  type: serial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: region
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lat
+                  type: numeric(10, 7)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lon
+                  type: numeric(10, 7)
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_regions_name
+            tableName: regions
+            columns:
+              - column:
+                  name: region
