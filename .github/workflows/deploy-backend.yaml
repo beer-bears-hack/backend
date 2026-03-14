@@ -21,6 +21,12 @@ jobs:
         run: |          
           docker-compose down
           
+          export YC_ACCESS_KEY_ID=${{ secrets.YC_ACCESS_KEY_ID }}
+          export YC_SECRET_ACCESS_KEY=${{ secrets.YC_SECRET_ACCESS_KEY }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+
+
           # Build and start
           if [ -n "${{ github.event.inputs.service }}" ]; then
             docker-compose up -d --build ${{ github.event.inputs.service }}
