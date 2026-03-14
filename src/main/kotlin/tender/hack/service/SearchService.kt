@@ -44,8 +44,11 @@ class SearchService(
     fun search(query: String, category: String?, manufacturer: String?): List<SearchResultItem> {
         log.info("Search request: query='$query', category=$category, manufacturer=$manufacturer)")
 
+        val categoryAfterCheck = category ?: ""
+        val manufacturerAfterCheck = manufacturer ?: ""
+
         // Call ML API to get similar CTE IDs
-        val queryForMl = "Наименование: '$query'. Категория: '$category'. Производитель: '$manufacturer'."
+        val queryForMl = "Наименование: '$query'. Категория: '$categoryAfterCheck'. Производитель: '$manufacturerAfterCheck'."
         val mlResponse = callMlSearch(queryForMl)
         
         // Get full CTE data for each result
