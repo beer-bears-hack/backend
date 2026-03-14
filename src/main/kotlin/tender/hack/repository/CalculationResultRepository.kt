@@ -15,10 +15,10 @@ class CalculationResultRepository(
         jdbcClient.sql("""
             INSERT INTO calculation_results (
                 user_id, unit_price, total_price, min_price, max_price,
-                coeff_variation, is_homogeneous, quantity, method
+                coeff_variation, is_homogeneous, quantity, method, cte_id
             ) VALUES (
                 :userId, :unitPrice, :totalPrice, :minPrice, :maxPrice,
-                :coeffVariation, :isHomogeneous, :quantity, :method
+                :coeffVariation, :isHomogeneous, :quantity, :method, :cte_id
             )
         """.trimIndent())
             .param("userId", entity.sessionId)
@@ -30,6 +30,7 @@ class CalculationResultRepository(
             .param("isHomogeneous", entity.isHomogeneous)
             .param("quantity", entity.quantity)
             .param("method", entity.method)
+            .param("cte_id", entity.cteId)
             .update()
 
         return entity
@@ -52,9 +53,34 @@ class CalculationResultRepository(
                     coeffVariation = rs.getDouble("coeff_variation"),
                     isHomogeneous = rs.getBoolean("is_homogeneous"),
                     quantity = rs.getBigDecimal("quantity"),
-                    method = rs.getString("method")
+                    method = rs.getString("method"),
+                    cteId = rs.getString("cte_id"),
                 )
             }
             .singleOrNull()
+    }
+
+    fun findResultsBySessionId(sessionId: UUID): List<CalculationResultEntity> {
+        return jdbcClient.sql("""
+            SELECT * FROM calculation_results WHERE user_id = :userId
+            ORDER BY created_at DESC
+        """.trimIndent())
+            .param("userId", sessionId)
+            .query { rs, _ ->
+                CalculationResultEntity(
+                    id = UUID.fromString(rs.getString("id")),
+                    sessionId = sessionId,
+                    unitPrice = rs.getBigDecimal("unit_price"),
+                    totalPrice = rs.getBigDecimal("total_price"),
+                    minPrice = rs.getBigDecimal("min_price"),
+                    maxPrice = rs.getBigDecimal("max_price"),
+                    coeffVariation = rs.getDouble("coeff_variation"),
+                    isHomogeneous = rs.getBoolean("is_homogeneous"),
+                    quantity = rs.getBigDecimal("quantity"),
+                    method = rs.getString("method"),
+                    cteId = rs.getString("cte_id"),
+                )
+            }
+            .list()
     }
 }

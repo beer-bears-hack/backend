@@ -103,7 +103,8 @@ class CalculationService(
             coeffVariation = request.coeffVariation,
             isHomogeneous = request.isHomogeneous,
             quantity = BigDecimal.valueOf(request.quantity.toLong()),
-            method = null
+            method = null,
+            cteId = request.cteId
         )
         calculationResultRepository.save(entity)
         log.info("Saved calculation result for session $sessionId")
