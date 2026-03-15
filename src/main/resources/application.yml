@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jdbc:
     template:
-      max-rows: 1000
+      max-rows: 10000
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml

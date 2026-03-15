@@ -21,3 +21,5 @@ databaseChangeLog:
       file: db/changelog/changes/011-calculation-results-extended.yaml
   - include:
       file: db/changelog/changes/012-calculation-items.yaml
+  - include:
+      file: db/changelog/changes/013-remove-varchar-limits-from-calculation-items.yaml
