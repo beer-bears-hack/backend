@@ -35,4 +35,12 @@ class UserController(
             )
         )
     }
+
+    @DeleteMapping("/sessions/{uuid}/items/{id}")
+    fun deleteResultById(@PathVariable uuid: String, @PathVariable id: String) {
+        userService.deleteResultById(
+            UUID.fromString(uuid),
+            UUID.fromString(id)
+        )
+    }
 }

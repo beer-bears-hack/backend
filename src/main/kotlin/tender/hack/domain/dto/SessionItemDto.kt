@@ -6,5 +6,6 @@ class SessionItemDto(
     val quantity: Int,
     val unitPrice: Double,
     val totalPrice: Double,
+    val resultId: String
 ) {
 }

@@ -97,4 +97,14 @@ class CalculationResultRepository(
             }
             .list()
     }
+
+    fun deleteResultByCteId(sessionId: UUID, id: UUID) {
+        jdbcClient.sql("""
+            delete from calculation_results 
+            where user_id = :userId and id = :id
+        """.trimIndent())
+            .param("userId", sessionId)
+            .param("id", id)
+            .update()
+    }
 }
