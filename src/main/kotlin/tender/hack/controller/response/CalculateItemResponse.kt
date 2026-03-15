@@ -8,7 +8,11 @@ package tender.hack.controller.response
  *   "total_price": 1200.0,
  *   "price_range": { "min": 1000.0, "max": 1500.0 },
  *   "coeff_variation": 0.15,
- *   "is_homogeneous": true
+ *   "is_homogeneous": true,
+ *   "quantity": 1,
+ *   "effective_sample_size": 15.5,
+ *   "outliers_removed": 2,
+ *   "no_data_reason": null
  * }
  */
 data class CalculateItemResponse(
@@ -17,7 +21,10 @@ data class CalculateItemResponse(
     val priceRange: PriceRange,
     val coeffVariation: Double,
     val isHomogeneous: Boolean,
-    val quantity: Int
+    val quantity: Int,
+    val effectiveSampleSize: Double = 0.0,
+    val outliersRemoved: Int = 0,
+    val noDataReason: String? = null
 )
 
 data class PriceRange(

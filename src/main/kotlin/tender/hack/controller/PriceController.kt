@@ -41,6 +41,7 @@ class PriceController(
         val cteInfo = apiService.takeCteInfoById(cteId)
         return ResponseEntity.ok(
             GetPricesResponse(
+                region = region,
                 cteDto = cteInfo,
                 results = results
             )

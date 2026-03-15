@@ -31,6 +31,13 @@ class ApiFrontController(
         return ResponseEntity.ok(results)
     }
 
+    @GetMapping("/regions")
+    @Operation(summary = "Find all unique regions")
+    fun findRegions(): ResponseEntity<List<String>> {
+        val results = apiService.findRegions()
+        return ResponseEntity.ok(results)
+    }
+
     @GetMapping("/cteInfo/{cteId}")
     @Operation(summary = "Find all info by cteId")
     fun takeCteInfoById(@PathVariable cteId: String): ResponseEntity<CteDto> {

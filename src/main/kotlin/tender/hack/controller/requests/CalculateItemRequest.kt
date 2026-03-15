@@ -10,6 +10,7 @@ package tender.hack.controller.requests
  * - method: calculation method
  */
 data class CalculateItemRequest(
+    val region: String?,
     val items: List<CalculateItem>,
     val quantity: Int = 1,
     val method: String = "comparable_market_prices"
@@ -17,7 +18,8 @@ data class CalculateItemRequest(
 
 data class CalculateItem(
     val contractId: String?,
-    val cteId: String?,
+    val cteId: String,
     val price: Double?,
-    val source: String?
+    val source: String?,
+    val similarity: Double // ML similarity score for CTE-based results
 )
