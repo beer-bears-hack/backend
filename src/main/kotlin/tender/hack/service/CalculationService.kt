@@ -150,7 +150,7 @@ class CalculationService(
                     PriceDataPoint(
                         price = cp.price,
                         date = cp.date,
-                        region = cp.region,
+                        region = cp.region ?: request.region,
                         supplier = cp.source,  // Actual supplier name from contract
                         similarity = item.similarity,  // Use ML similarity score
                         cteId = item.cteId
@@ -229,7 +229,7 @@ class CalculationService(
      * Calculate weight for a data point
      * w_i = weight_date * weight_region * similarity
      */
-    private fun calculateWeight(data: PriceDataPoint, targetRegion: String?): Double {
+    private fun calculateWeight(data: PriceDataPoint, targetRegion: String): Double {
         val weightDate = calculateDateWeight(data.date)
         val weightRegion = calculateRegionWeight(data.region, targetRegion)
 
@@ -258,9 +258,9 @@ class CalculationService(
      * Calculate region weight based on distance
      * Half-life decay: weight = 0.5^(distance / halfLife)
      */
-    private fun calculateRegionWeight(dataRegion: String?, targetRegion: String?): Double {
+    private fun calculateRegionWeight(dataRegion: String?, targetRegion: String): Double {
         // If no region info or same region, return full weight
-        if (dataRegion == null || targetRegion == null) return 1.0
+        if (dataRegion == null) return 1.0
         if (dataRegion == targetRegion) return 1.0
 
         // Calculate distance between regions
@@ -391,6 +391,14 @@ class CalculationService(
     }
 
     fun saveCalculation(sessionId: UUID, request: SaveCalculationRequest) {
+        // Calculate similarity threshold: X = min(0.8, BEST-0.1)
+        // For saved results, we use a default based on effective sample size
+        val similarityThreshold = if (request.effectiveSampleSize > 0) {
+            min(0.8, 1.0 - 0.1)  // Assuming best similarity is 1.0 for saved data
+        } else {
+            null
+        }
+
         val entity = CalculationResultEntity(
             id = UUID.randomUUID(),
             sessionId = sessionId,
@@ -402,7 +410,11 @@ class CalculationService(
             isHomogeneous = request.isHomogeneous,
             quantity = BigDecimal.valueOf(request.quantity.toLong()),
             method = null,
-            cteId = request.cteId
+            cteId = request.cteId,
+            effectiveSampleSize = request.effectiveSampleSize,
+            outliersRemoved = request.outliersRemoved,
+            similarityThreshold = similarityThreshold,
+            noDataReason = request.noDataReason
         )
         calculationResultRepository.save(entity)
         log.info("Saved calculation result for session $sessionId")
@@ -412,7 +424,7 @@ class CalculationService(
     data class PriceDataPoint(
         val price: Double,
         val date: LocalDate,
-        val region: String?,
+        val region: String,
         val supplier: String,
         val similarity: Double,
         val cteId: String,

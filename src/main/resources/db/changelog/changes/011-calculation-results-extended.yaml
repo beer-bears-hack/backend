@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-calculation-results-extended
+      author: ko.zimin
+      comment: Add extended fields for calculation algorithm metrics
+
+      changes:
+        - addColumn:
+            tableName: calculation_results
+            columns:
+              - column:
+                  name: effective_sample_size
+                  type: numeric
+                  comment: KISH effective sample size (neff = (Σwi)² / Σ(wi²)), target 12-15
+              - column:
+                  name: outliers_removed
+                  type: integer
+                  comment: Number of outliers removed by MAD method
+              - column:
+                  name: similarity_threshold
+                  type: numeric
+                  comment: Similarity threshold X = min(0.8, BEST-0.1)
+              - column:
+                  name: no_data_reason
+                  type: varchar(500)
+                  comment: Reason for no-data result if calculation failed

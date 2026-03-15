@@ -14,5 +14,9 @@ data class CalculationResultEntity(
     val isHomogeneous: Boolean,
     val quantity: BigDecimal?,
     val method: String?,
-    val cteId: String
+    val cteId: String,
+    val effectiveSampleSize: Double?,
+    val outliersRemoved: Int?,
+    val similarityThreshold: Double?,
+    val noDataReason: String?
 )
