@@ -1,5 +1,6 @@
 package tender.hack.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -15,12 +16,13 @@ class PriceService(
     private val cteRepository: CteRepository,
     private val searchService: SearchService
 ) {
+    private val log = LoggerFactory.getLogger(PriceService::class.java)
 
     /**
      * Search by chosen cte in ML model
      */
-    fun getPricesForSte(steId: String, region: String?, period: Int): List<SearchResultItem> {
-        val cteEntity = cteRepository.findByCteId(steId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    fun getPricesForSte(cteId: String, region: String?, period: Int): List<SearchResultItem> {
+        val cteEntity = cteRepository.findByCteId(cteId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
         val response = searchService.search(
             cteEntity.cteName,

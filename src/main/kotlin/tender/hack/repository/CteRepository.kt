@@ -102,4 +102,15 @@ class CteRepository(
             .query(CteEntityMapper)
             .singleOrNull()
     }
+
+    fun checkAmountManufacturersById(cteId: String): Int{
+        return jdbcClient.sql("""
+            select distinct manufacturer from cte
+            where cte_id = :cte_id
+        """.trimIndent())
+            .param("cte_id", cteId)
+            .query(String::class.java)
+            .list()
+            .size
+    }
 }

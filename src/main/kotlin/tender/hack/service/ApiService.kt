@@ -6,10 +6,12 @@ import org.springframework.web.server.ResponseStatusException
 import tender.hack.domain.dto.CteDto
 import tender.hack.domain.entity.CteEntity
 import tender.hack.repository.CteRepository
+import tender.hack.repository.RegionRepository
 
 @Service
 class ApiService(
-    private val cteRepository: CteRepository
+    private val cteRepository: CteRepository,
+    private val regionRepository: RegionRepository
 ) {
 
     fun findCategories(): List<String> {
@@ -18,6 +20,10 @@ class ApiService(
 
     fun findManufacturers(): List<String> {
         return cteRepository.findAllManufacturers()
+    }
+
+    fun findRegions(): List<String> {
+        return regionRepository.findAllRegions()
     }
 
     fun takeCteInfoById(cteId: String): CteDto {

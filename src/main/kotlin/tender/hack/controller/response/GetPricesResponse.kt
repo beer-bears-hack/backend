@@ -4,6 +4,7 @@ import tender.hack.domain.dto.CteDto
 import tender.hack.domain.dto.PriceDto
 
 class GetPricesResponse(
+    val region: String?,
     val cteDto: CteDto,
     val results: List<SearchResultItem>,
 )
