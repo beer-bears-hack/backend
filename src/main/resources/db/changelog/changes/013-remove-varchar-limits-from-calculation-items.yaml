@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-remove-varchar-limits-from-calculation-items
+      author: ko.zimin
+      comment: Remove size limits from calculation_items columns
+
+      changes:
+        - modifyDataType:
+            tableName: calculation_items
+            columnName: cte_id
+            newDataType: TEXT
+
+        - modifyDataType:
+            tableName: calculation_items
+            columnName: region
+            newDataType: TEXT
+
+        - modifyDataType:
+            tableName: calculation_items
+            columnName: supplier
+            newDataType: TEXT

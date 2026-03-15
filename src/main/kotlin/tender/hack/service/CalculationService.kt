@@ -38,7 +38,8 @@ class CalculationService(
     private val contractRepository: ContractRepository,
     private val calculationResultRepository: CalculationResultRepository,
     private val calculationItemRepository: tender.hack.repository.CalculationItemRepository,
-    private val regionRepository: RegionRepository
+    private val regionRepository: RegionRepository,
+    private val apiService: ApiService
 ) {
     private val log = LoggerFactory.getLogger(CalculationService::class.java)
 
@@ -61,7 +62,14 @@ class CalculationService(
         log.info("Calculate request: ${request.items.size} items, region=${request.region}")
 
         // Step 1: Collect all price data with metadata
-        //TODO check unique amount of manufacturers for all ctes
+        val manufacturer = request.items.mapNotNull {
+            apiService.takeCteInfoById(it.cteId).manufacturer
+        }.distinct()
+
+        if (manufacturer.size < 3) {
+            return createNoDataResponse(request.quantity, "Недостаточно данных для анализа")
+        }
+
         val priceDataList = collectPriceData(request)
 
         if (priceDataList.isEmpty()) {
