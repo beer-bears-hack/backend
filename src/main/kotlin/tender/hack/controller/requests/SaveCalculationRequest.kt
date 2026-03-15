@@ -1,5 +1,7 @@
 package tender.hack.controller.requests
 
+import tender.hack.service.CalculationService.PriceDataPoint
+
 /**
  * POST /calculate/save
  * Save calculation result to database.
@@ -27,7 +29,8 @@ data class SaveCalculationRequest(
     val effectiveSampleSize: Double,
     val outliersRemoved: Int,
     val noDataReason: String?,
-    val cteId: String
+    val cteId: String,
+    val cleanedData: List<PriceDataPoint>
 )
 
 data class PriceRangeInput(

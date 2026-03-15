@@ -10,8 +10,11 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import tender.hack.domain.dto.CteDto
 import tender.hack.domain.entity.CalculationResultEntity
+import tender.hack.repository.CalculationItemRepository
 import tender.hack.repository.CalculationResultRepository
+import tender.hack.repository.ContractRepository
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.ZoneOffset
@@ -33,7 +36,10 @@ import java.util.*
  */
 @Service
 class DocumentService(
-    private val calculationResultRepository: CalculationResultRepository
+    private val calculationResultRepository: CalculationResultRepository,
+    private val calculationItemRepository: CalculationItemRepository,
+    private val cteService: ApiService,
+    private val contractRepository: ContractRepository
 ) {
     private val log = LoggerFactory.getLogger(DocumentService::class.java)
 
@@ -92,7 +98,9 @@ class DocumentService(
             ?: throw IllegalArgumentException("No calculation result found for session: $sessionId")
 
         // Generate DOCX content
-        val docxContent = generateDocxContent(calculationResult, request.settings)
+        val contractData = contractRepository.findByCteId(calculationResult.cteId)
+        val cteDto = cteService.takeCteInfoById(calculationResult.cteId)
+        val docxContent = generateDocxContent(calculationResult, request.settings, cteDto)
 
         // Upload to S3
         val fileName = "justification_${sessionId}_${System.currentTimeMillis()}.docx"
@@ -114,9 +122,12 @@ class DocumentService(
      */
     private fun generateDocxContent(
         result: CalculationResultEntity,
-        settings: DocumentSettings
+        settings: DocumentSettings,
+        cteDto: CteDto
     ): ByteArray {
         val document = XWPFDocument()
+
+        val calculationItems = calculationItemRepository.findByCalculationId(result.id)
 
         // Title
         createHeading(document, "ОБОСНОВАНИЕ НАЧАЛЬНОЙ МАКСИМАЛЬНОЙ ЦЕНЫ КОНТРАКТА", 16, true)
@@ -125,7 +136,7 @@ class DocumentService(
         createParagraph(document, "Предмет контракта:", settings.purchaseName, true)
 
         // Customer info section
-        createSection(document, "Наименование заказчика: ${settings.customerName}")
+        createSection(document, "Наименование заказчика: ${settings.signerName ?: settings.customerName}")
         createParagraph(document, "Место нахождения:", settings.customerAddress)
         createParagraph(document, "Номер контактного телефона:", settings.customerPhone)
         createParagraph(document, "Адрес электронной почты:", settings.customerEmail)
@@ -138,9 +149,9 @@ class DocumentService(
 
         // Position details (CTE)
         createParagraph(document, "Наименование товарной (работной) единицы:", "Позиция ${result.cteId}", true)
-        createParagraph(document, "Категория товарной (работной) единицы:", "Категория")
-        createParagraph(document, "Производитель товарной (работной) единицы:", "Производитель")
-        createParagraph(document, "Характеристики товарной (работной) единицы:", "Характеристики")
+        createParagraph(document, "Категория товарной (работной) единицы:", "${cteDto.category}")
+        createParagraph(document, "Производитель товарной (работной) единицы:", "${cteDto.manufacturer}")
+        createParagraph(document, "Характеристики товарной (работной) единицы:", "${cteDto.characteristics}")
 
         addEmptyLine(document)
 
@@ -148,9 +159,11 @@ class DocumentService(
         createParagraph(document, "Обоснование:", "", true)
         createParagraph(document, "", "Расчёт НМЦК для товарной (работной) единицы производился исходя из этих аналогов:")
         
-        // Add analogs list (placeholder - would need actual analog data)
-        createParagraph(document, "", "1. Аналог 1: ${result.unitPrice} руб.")
-        createParagraph(document, "", "2. Аналог 2: ${result.minPrice ?: result.unitPrice} руб.")
+        // Add analogs list from calculationItems
+        calculationItems.forEachIndexed { index, item ->
+            val cteDto = cteService.takeCteInfoById(item.cteId)
+            createParagraph(document, "", "${index + 1}. CTE ${cteDto.cteName}: ${item.price} руб. Вес у данной цены: ${item.weight}")
+        }
 
         addEmptyLine(document)
 

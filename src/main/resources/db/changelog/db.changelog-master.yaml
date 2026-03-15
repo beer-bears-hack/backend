@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changes/010-change-calculation-results.yaml
   - include:
       file: db/changelog/changes/011-calculation-results-extended.yaml
+  - include:
+      file: db/changelog/changes/012-calculation-items.yaml
