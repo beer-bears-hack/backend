@@ -6,6 +6,7 @@ import org.springframework.web.server.ResponseStatusException
 import tender.hack.domain.dto.SessionDto
 import tender.hack.domain.dto.SessionItemDto
 import tender.hack.domain.dto.UserDto
+import tender.hack.repository.CalculationItemRepository
 import tender.hack.repository.CalculationResultRepository
 import tender.hack.repository.UserRepository
 import java.util.UUID
@@ -14,6 +15,7 @@ import java.util.UUID
 class UserService(
     private val userRepository: UserRepository,
     private val calculationResultRepository: CalculationResultRepository,
+    private val calculationItemRepository: CalculationItemRepository,
     private val apiService: ApiService
 ) {
 
@@ -42,8 +44,14 @@ class UserService(
                     quantity = it.quantity?.toInt() ?: 0,
                     unitPrice = it.unitPrice.toDouble(),
                     totalPrice = it.totalPrice.toDouble(),
+                    resultId = it.id.toString()
                 )
             }
         )
+    }
+
+    fun deleteResultById(sessionId: UUID, id: UUID) {
+        calculationItemRepository.deleteByCalculationId(id)
+        calculationResultRepository.deleteResultByCteId(sessionId, id)
     }
 }

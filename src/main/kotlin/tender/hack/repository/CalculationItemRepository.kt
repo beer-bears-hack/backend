@@ -59,4 +59,12 @@ class CalculationItemRepository(
             }
             .list()
     }
+
+    fun deleteByCalculationId(calculationId: UUID) {
+        jdbcClient.sql("""
+            DELETE FROM calculation_items WHERE calculation_id = :calculationId
+        """.trimIndent())
+            .param("calculationId", calculationId)
+            .update()
+    }
 }
