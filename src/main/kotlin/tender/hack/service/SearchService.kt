@@ -91,7 +91,7 @@ class SearchService(
      * "Наименование: {name}. Категория: {category}. Производитель: {manufacturer}. Характеристики: {characteristics}"
      */
     private fun callMlSearch(query: String): MlSearchResponse {
-        val json = objectMapper.writeValueAsString(mapOf("query" to query, "top_k" to 100))
+        val json = objectMapper.writeValueAsString(mapOf("query" to query, "top_k" to 50))
         
         val request = Request.Builder()
             .url("$mlApiUrl/search")

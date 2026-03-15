@@ -15,10 +15,12 @@ class CalculationResultRepository(
         jdbcClient.sql("""
             INSERT INTO calculation_results (
                 user_id, unit_price, total_price, min_price, max_price,
-                coeff_variation, is_homogeneous, quantity, method, cte_id
+                coeff_variation, is_homogeneous, quantity, method, cte_id,
+                effective_sample_size, outliers_removed, similarity_threshold, no_data_reason
             ) VALUES (
                 :userId, :unitPrice, :totalPrice, :minPrice, :maxPrice,
-                :coeffVariation, :isHomogeneous, :quantity, :method, :cte_id
+                :coeffVariation, :isHomogeneous, :quantity, :method, :cte_id,
+                :effectiveSampleSize, :outliersRemoved, :similarityThreshold, :noDataReason
             )
         """.trimIndent())
             .param("userId", entity.sessionId)
@@ -31,6 +33,10 @@ class CalculationResultRepository(
             .param("quantity", entity.quantity)
             .param("method", entity.method)
             .param("cte_id", entity.cteId)
+            .param("effectiveSampleSize", entity.effectiveSampleSize)
+            .param("outliersRemoved", entity.outliersRemoved)
+            .param("similarityThreshold", entity.similarityThreshold)
+            .param("noDataReason", entity.noDataReason)
             .update()
 
         return entity
@@ -55,6 +61,10 @@ class CalculationResultRepository(
                     quantity = rs.getBigDecimal("quantity"),
                     method = rs.getString("method"),
                     cteId = rs.getString("cte_id"),
+                    effectiveSampleSize = rs.getDouble("effective_sample_size"),
+                    outliersRemoved = rs.getInt("outliers_removed"),
+                    similarityThreshold = rs.getDouble("similarity_threshold"),
+                    noDataReason = rs.getString("no_data_reason")
                 )
             }
             .singleOrNull()
@@ -79,6 +89,10 @@ class CalculationResultRepository(
                     quantity = rs.getBigDecimal("quantity"),
                     method = rs.getString("method"),
                     cteId = rs.getString("cte_id"),
+                    effectiveSampleSize = rs.getDouble("effective_sample_size"),
+                    outliersRemoved = rs.getInt("outliers_removed"),
+                    similarityThreshold = rs.getDouble("similarity_threshold"),
+                    noDataReason = rs.getString("no_data_reason")
                 )
             }
             .list()
