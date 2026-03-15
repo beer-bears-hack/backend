@@ -26,9 +26,6 @@ class SearchService(
     private val log = LoggerFactory.getLogger(SearchService::class.java)
     private val objectMapper = jacksonObjectMapper()
 
-    private val SIMILARITY_LIMIT = 0.8
-
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -54,9 +51,7 @@ class SearchService(
         val mlResponse = callMlSearch(queryForMl)
         
         // Get full CTE data for each result only for ones, where score more than predefined limit
-        return mlResponse.results.filter {
-                it.score > SIMILARITY_LIMIT
-            }.map { result ->
+        return mlResponse.results.map { result ->
             val cte = cteRepository.findByCteId(result.cteId.toString())
             
             val prices = if (cte != null) {
