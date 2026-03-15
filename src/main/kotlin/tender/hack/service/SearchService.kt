@@ -47,7 +47,8 @@ class SearchService(
         val manufacturerAfterCheck = manufacturer ?: ""
 
         // Call ML API to get similar CTE IDs
-        val queryForMl = "Наименование: '$query'. Категория: '$categoryAfterCheck'. Производитель: '$manufacturerAfterCheck'."
+//        val queryForMl = "Наименование: '$query'. Категория: '$categoryAfterCheck'. Производитель: '$manufacturerAfterCheck'."
+        val queryForMl = "'$query''$categoryAfterCheck''$manufacturerAfterCheck''"
         val mlResponse = callMlSearch(queryForMl)
         
         // Get full CTE data for each result only for ones, where score more than predefined limit

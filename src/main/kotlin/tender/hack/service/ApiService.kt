@@ -34,7 +34,18 @@ class ApiService(
             result.cteName,
             result.category,
             result.manufacturer,
-            result.characteristics
+            parseCharacteristics(result.characteristics)
         )
+    }
+
+    private fun parseCharacteristics(characteristics: String?): Map<String, String> {
+        if (characteristics.isNullOrBlank()) return emptyMap()
+
+        return characteristics.split(";")
+            .mapNotNull { part ->
+                val kv = part.split(":")
+                if (kv.size == 2) kv[0].trim() to kv[1].trim() else null
+            }
+            .toMap()
     }
 }
