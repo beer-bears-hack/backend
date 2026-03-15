@@ -6,5 +6,5 @@ data class CteDto(
     val cteName: String,
     val category: String?,
     val manufacturer: String?,
-    val characteristics: String?,
+    val characteristics: Map<String, String>,
 )
