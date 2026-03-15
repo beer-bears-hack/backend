@@ -3,6 +3,7 @@ package tender.hack.service
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import tender.hack.controller.requests.CalculateItemRequest
 import tender.hack.controller.requests.SaveCalculationRequest
@@ -36,6 +37,7 @@ import kotlin.math.*
 class CalculationService(
     private val contractRepository: ContractRepository,
     private val calculationResultRepository: CalculationResultRepository,
+    private val calculationItemRepository: tender.hack.repository.CalculationItemRepository,
     private val regionRepository: RegionRepository
 ) {
     private val log = LoggerFactory.getLogger(CalculationService::class.java)
@@ -127,7 +129,8 @@ class CalculationService(
             isHomogeneous = isHomogeneous,
             quantity = request.quantity,
             effectiveSampleSize = neff,
-            outliersRemoved = weightedData.size - cleanedData.size
+            outliersRemoved = weightedData.size - cleanedData.size,
+            cleanedData = cleanedData,
         )
     }
 
@@ -378,7 +381,8 @@ class CalculationService(
             quantity = quantity,
             effectiveSampleSize = 0.0,
             outliersRemoved = 0,
-            noDataReason = reason
+            noDataReason = reason,
+            cleanedData = emptyList()
         )
     }
 
@@ -390,17 +394,19 @@ class CalculationService(
         return kotlin.math.sqrt(variance)
     }
 
+    @Transactional
     fun saveCalculation(sessionId: UUID, request: SaveCalculationRequest) {
         // Calculate similarity threshold: X = min(0.8, BEST-0.1)
-        // For saved results, we use a default based on effective sample size
         val similarityThreshold = if (request.effectiveSampleSize > 0) {
-            min(0.8, 1.0 - 0.1)  // Assuming best similarity is 1.0 for saved data
+            min(0.8, 1.0 - 0.1)
         } else {
             null
         }
 
-        val entity = CalculationResultEntity(
-            id = UUID.randomUUID(),
+        val resultId = UUID.randomUUID()
+        
+        val resultEntity = CalculationResultEntity(
+            id = resultId,
             sessionId = sessionId,
             unitPrice = BigDecimal.valueOf(request.unitPrice),
             totalPrice = BigDecimal.valueOf(request.totalPrice),
@@ -416,8 +422,26 @@ class CalculationService(
             similarityThreshold = similarityThreshold,
             noDataReason = request.noDataReason
         )
-        calculationResultRepository.save(entity)
-        log.info("Saved calculation result for session $sessionId")
+        
+        // Save main calculation result first (parent)
+        calculationResultRepository.save(resultEntity)
+        
+        // Save cleaned data items (analog prices used for calculation)
+        val itemEntities = request.cleanedData.map { point ->
+            tender.hack.domain.entity.CalculationItemEntity(
+                calculationId = resultEntity.id,
+                cteId = point.cteId,
+                price = BigDecimal.valueOf(point.price),
+                date = point.date,
+                region = point.region,
+                supplier = point.supplier,
+                similarity = point.similarity,
+                weight = point.weight
+            )
+        }
+        calculationItemRepository.saveAll(itemEntities)
+        
+        log.info("Saved calculation result for session $sessionId with ${itemEntities.size} price items")
     }
 
     // Data classes for calculation

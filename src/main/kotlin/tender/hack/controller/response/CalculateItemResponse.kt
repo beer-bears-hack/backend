@@ -1,5 +1,7 @@
 package tender.hack.controller.response
 
+import tender.hack.service.CalculationService.PriceDataPoint
+
 /**
  * Response for /calculate/item endpoint
  *
@@ -24,7 +26,8 @@ data class CalculateItemResponse(
     val quantity: Int,
     val effectiveSampleSize: Double = 0.0,
     val outliersRemoved: Int = 0,
-    val noDataReason: String? = null
+    val noDataReason: String? = null,
+    val cleanedData: List<PriceDataPoint>
 )
 
 data class PriceRange(

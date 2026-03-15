@@ -10,19 +10,19 @@ import java.util.UUID
 class CalculationResultRepository(
     private val jdbcClient: JdbcClient
 ) {
-    //TODO: добавить сохранение всех cteId, которые участвовали для этого результата
     fun save(entity: CalculationResultEntity): CalculationResultEntity {
         jdbcClient.sql("""
             INSERT INTO calculation_results (
-                user_id, unit_price, total_price, min_price, max_price,
+                id, user_id, unit_price, total_price, min_price, max_price,
                 coeff_variation, is_homogeneous, quantity, method, cte_id,
                 effective_sample_size, outliers_removed, similarity_threshold, no_data_reason
             ) VALUES (
-                :userId, :unitPrice, :totalPrice, :minPrice, :maxPrice,
+                :id, :userId, :unitPrice, :totalPrice, :minPrice, :maxPrice,
                 :coeffVariation, :isHomogeneous, :quantity, :method, :cte_id,
                 :effectiveSampleSize, :outliersRemoved, :similarityThreshold, :noDataReason
             )
         """.trimIndent())
+            .param("id", entity.id)
             .param("userId", entity.sessionId)
             .param("unitPrice", entity.unitPrice)
             .param("totalPrice", entity.totalPrice)

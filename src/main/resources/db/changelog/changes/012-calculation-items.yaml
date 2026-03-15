@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-calculation-items
+      author: ko.zimin
+      comment: Create table to store calculation price items (analog data)
+
+      changes:
+        - createTable:
+            tableName: calculation_items
+            columns:
+              - column:
+                  name: id
+                  type: serial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: calculation_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_calculation_item_calculation
+                    references: calculation_results(id)
+              - column:
+                  name: cte_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: date
+              - column:
+                  name: region
+                  type: varchar(255)
+              - column:
+                  name: supplier
+                  type: varchar(255)
+              - column:
+                  name: similarity
+                  type: numeric
+              - column:
+                  name: weight
+                  type: numeric
+
+        - createIndex:
+            indexName: idx_calculation_item_calculation_id
+            tableName: calculation_items
+            columns:
+              - column:
+                  name: calculation_id
