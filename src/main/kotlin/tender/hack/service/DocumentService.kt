@@ -94,13 +94,11 @@ class DocumentService(
         log.info("Generate document for session: ${request.sessionId}")
 
         val sessionId = UUID.fromString(request.sessionId)
-        val calculationResult = calculationResultRepository.findBySessionId(sessionId)
-            ?: throw IllegalArgumentException("No calculation result found for session: $sessionId")
+        val calculationResults = calculationResultRepository.findResultsBySessionId(sessionId)
+            .ifEmpty { throw IllegalArgumentException("No calculation results found for session: $sessionId") }
 
-        // Generate DOCX content
-        val contractData = contractRepository.findByCteId(calculationResult.cteId)
-        val cteDto = cteService.takeCteInfoById(calculationResult.cteId)
-        val docxContent = generateDocxContent(calculationResult, request.settings, cteDto)
+        // Generate DOCX content with all calculation results
+        val docxContent = generateDocxContent(calculationResults, request.settings)
 
         // Upload to S3
         val fileName = "justification_${sessionId}_${System.currentTimeMillis()}.docx"
@@ -119,15 +117,13 @@ class DocumentService(
     /**
      * Generate DOCX document using Apache POI
      * Follows the template from "обоснование НМЦК.md"
+     * Generates sections for ALL calculation results in the session
      */
     private fun generateDocxContent(
-        result: CalculationResultEntity,
-        settings: DocumentSettings,
-        cteDto: CteDto
+        results: List<CalculationResultEntity>,
+        settings: DocumentSettings
     ): ByteArray {
         val document = XWPFDocument()
-
-        val calculationItems = calculationItemRepository.findByCalculationId(result.id)
 
         // Title
         createHeading(document, "ОБОСНОВАНИЕ НАЧАЛЬНОЙ МАКСИМАЛЬНОЙ ЦЕНЫ КОНТРАКТА", 16, true)
@@ -135,7 +131,7 @@ class DocumentService(
         // Contract subject
         createParagraph(document, "Предмет контракта:", settings.purchaseName, true)
 
-        // Customer info section
+        // Customer info section (once for entire document)
         createSection(document, "Наименование заказчика: ${settings.signerName ?: settings.customerName}")
         createParagraph(document, "Место нахождения:", settings.customerAddress)
         createParagraph(document, "Номер контактного телефона:", settings.customerPhone)
@@ -144,44 +140,51 @@ class DocumentService(
 
         addEmptyLine(document)
 
-        // Calculation details section
-        createHeading(document, "Детализация расчёта по позициям:", 14, true)
+        // Process EACH calculation result
+        results.forEachIndexed { resultIndex, result ->
+            val calculationItems = calculationItemRepository.findByCalculationId(result.id)
+            val cteDto = cteService.takeCteInfoById(result.cteId)
 
-        // Position details (CTE)
-        createParagraph(document, "Наименование товарной (работной) единицы:", "Позиция ${result.cteId}", true)
-        createParagraph(document, "Категория товарной (работной) единицы:", "${cteDto.category}")
-        createParagraph(document, "Производитель товарной (работной) единицы:", "${cteDto.manufacturer}")
-        createParagraph(document, "Характеристики товарной (работной) единицы:", "${cteDto.characteristics}")
+            // Section heading for this CTE position
+            createHeading(document, "Позиция ${resultIndex + 1}: CTE ${result.cteId}", 14, true)
 
-        addEmptyLine(document)
+            // Position details (CTE)
+            createParagraph(document, "Наименование товарной (работной) единицы:", "${cteDto.cteName}", true)
+            createParagraph(document, "Категория товарной (работной) единицы:", "${cteDto.category}")
+            createParagraph(document, "Производитель товарной (работной) единицы:", "${cteDto.manufacturer}")
+            createParagraph(document, "Характеристики товарной (работной) единицы:", "${cteDto.characteristics}")
 
-        // Justification text
-        createParagraph(document, "Обоснование:", "", true)
-        createParagraph(document, "", "Расчёт НМЦК для товарной (работной) единицы производился исходя из этих аналогов:")
-        
-        // Add analogs list from calculationItems
-        calculationItems.forEachIndexed { index, item ->
-            val cteDto = cteService.takeCteInfoById(item.cteId)
-            createParagraph(document, "", "${index + 1}. CTE ${cteDto.cteName}: ${item.price} руб. Вес у данной цены: ${item.weight}")
+            addEmptyLine(document)
+
+            // Justification text
+            createParagraph(document, "Обоснование:", "", true)
+            createParagraph(document, "", "Расчёт НМЦК для товарной (работной) единицы производился исходя из этих аналогов:")
+            
+            // Add analogs list from calculationItems
+            calculationItems.forEachIndexed { index, item ->
+                val itemCteDto = cteService.takeCteInfoById(item.cteId)
+                createParagraph(document, "", "${index + 1}. CTE ${itemCteDto.cteName}: ${item.price} руб. Вес у данной цены: ${item.weight}")
+            }
+
+            addEmptyLine(document)
+
+            // Price summary for this position
+            createParagraph(document, "Стоимость за единицу:", "${result.unitPrice} руб.", true)
+            createParagraph(document, "Количество единиц:", "${result.quantity} усл. ед.")
+            
+            val sum = result.unitPrice.multiply(result.quantity ?: BigDecimal.ONE)
+            createParagraph(document, "Сумма по позиции:", "${sum} руб.", true)
+
+            addEmptyLine(document)
+
+            // Total NMCK for this position
+            createHeading(document, "Итого НМЦК по позиции (без НДС): ${result.totalPrice} руб.", 14, true)
+
+            addEmptyLine(document)
+            addEmptyLine(document)
         }
 
-        addEmptyLine(document)
-
-        // Price summary
-        createParagraph(document, "Стоимость за единицу:", "${result.unitPrice} руб.", true)
-        createParagraph(document, "Количество единиц:", "${result.quantity} усл. ед.")
-        
-        val sum = result.unitPrice.multiply(result.quantity ?: BigDecimal.ONE)
-        createParagraph(document, "Сумма по позиции:", "${sum} руб.", true)
-
-        addEmptyLine(document)
-
-        // Total NMCK
-        createHeading(document, "Итого НМЦК (без НДС): ${result.totalPrice} руб.", 14, true)
-
-        addEmptyLine(document)
-
-        // Method description
+        // Method description (once for entire document)
         createHeading(document, "Используемый метод определения НМЦК с обоснованием:", 12, true)
         createParagraph(document, "", 
             "Метод сопоставимых рыночных цен (анализа рынка) в соответствии с частью 6 статьи 22 " +
@@ -224,16 +227,9 @@ class DocumentService(
 
         addEmptyLine(document)
 
-        // Additional metrics (for internal use)
-        if (result.effectiveSampleSize != null) {
-            createParagraph(document, "Эффективный размер выборки (KISH):", "${result.effectiveSampleSize}")
-        }
-        if (result.outliersRemoved != null && result.outliersRemoved > 0) {
-            createParagraph(document, "Удалено выбросов:", "${result.outliersRemoved}")
-        }
-        if (result.similarityThreshold != null) {
-            createParagraph(document, "Порог схожести:", "${result.similarityThreshold}")
-        }
+        // Summary totals for all positions
+        val grandTotal = results.sumOf { it.totalPrice }
+        createHeading(document, "ОБЩАЯ СУММА НМЦК (все позиции): ${grandTotal} руб.", 16, true)
 
         addEmptyLine(document)
 
